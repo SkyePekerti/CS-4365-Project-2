@@ -3,6 +3,8 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Driver {
 	
@@ -25,8 +27,8 @@ public class Driver {
 		String varFile = args[0]; //Retrieves the filename of the .var file
 		String conFile = args[1]; //Retrieves the filename of the .con file
 		
-		ArrayList<String> cons = new ArrayList<String>(); //Stores all of the information in the .var file
-		ArrayList<String> vars = new ArrayList<String>(); //Stores all fo the information in the .con file
+		ArrayList<Variable> vars = new ArrayList<Variable>(); //Stores all of the information in the .var file
+		ArrayList<Constraint> cons = new ArrayList<Constraint>(); //Stores all of the information in the .con file
 		boolean useCEP; //True if a Consistence-Enforcing Procedure is going to be used
 		
 		
@@ -34,7 +36,7 @@ public class Driver {
 			//Get the information from the .var file
             Scanner varin = new Scanner(new File(varFile));
 			while(varin.hasNextLine()) {
-				vars.add(varin.nextLine());
+				vars.add(new Variable(varin.nextLine()));
 			}
         }
 		catch (FileNotFoundException e) {
@@ -45,7 +47,7 @@ public class Driver {
 			//Get the information from the .con file
 			Scanner conin = new Scanner(new File(conFile));
 			while(conin.hasNextLine()) {
-				cons.add(conin.nextLine());
+				cons.add(new Constraint(conin.nextLine()));
 			}
 		}
 		catch (FileNotFoundException e) {
