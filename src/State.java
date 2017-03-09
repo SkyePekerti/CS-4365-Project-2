@@ -60,11 +60,13 @@ public class State {
      */
     public boolean isSolved() {
         for (Constraint c : cons) {
+			//Check if a Variable on a Constraint does not yet have a chosen value
             if (!selected.containsKey(c.var1) || !selected.containsKey(c.var2)) {
                 return false;
             }
             int val1 = selected.get(c.var1);
             int val2 = selected.get(c.var2);
+			//Check if the Constraint is satisfied, returns false if unsatisfied
             if (!c.valid(val1, val2)) {
                 return false;
             }
@@ -94,10 +96,12 @@ public class State {
     public int[] getOrderedVals() {
         Variable nextVar = vars.get(0);
         int[][] valPairs = new int[nextVar.values.size()][2];
+		//Matrix which holds the values of a Variable paired with the total affected values if a value is chosen
         for (int i = 0; i < valPairs.length; i++) {
             valPairs[i][0] = nextVar.values.get(i);
             valPairs[i][1] = getAffectedValues(nextVar, valPairs[i][0]);
         }
+		//Lambda sort the pairs in increasing order by number of affected values
         Arrays.sort(valPairs, (one, two) -> one[1] - two[1]);
         int[] orderedVals = new int[nextVar.values.size()];
         for (int i = 0; i < valPairs.length; i++) {
@@ -114,10 +118,14 @@ public class State {
      */
     private int getAffectedValues(Variable nextVar, int nextVal) {
         int numAffected = 0;
+		//Runs through all Constraints
         for (Constraint c : cons) {
+			//Checks if nextVar is the first Variable in the Constraint
             if (c.var1 == nextVar.var) {
                 for (Variable v : vars) {
+					//Finds which Variable is the second in the Constraint
                     if (c.var2 == v.var) {
+						//Sees which values in from v are affected by nextVal
                         for (int val : v.values) {
                             if (!c.valid(nextVal, val)) {
                                 numAffected++;
@@ -126,9 +134,13 @@ public class State {
                         break;
                     }
                 }
-            } else if (c.var2 == nextVar.var) {
+            }
+			//Checks if nextVar is the second Variable in the Constraint	
+			else if (c.var2 == nextVar.var) {
                 for (Variable v : vars) {
+					//Finds which Variable is the first in the Constraint
                     if (c.var1 == v.var) {
+						//Sees which values in from v are affected by nextVal
                         for (int val : v.values) {
                             if (!c.valid(val, nextVal)) {
                                 numAffected++;
