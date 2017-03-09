@@ -3,21 +3,31 @@ import java.util.Collections;
 import java.util.HashMap;
 
 /**
- * Created by TerrencePark on 3/6/17.
+ * Created by Terrence Park and Skye Pekerti
+ *
  */
 public class State {
 
-    ArrayList<Variable> vars;
-    ArrayList<Constraint> cons;
-    HashMap<Character, Integer> selected;
-    ArrayList<Variable> solvedVars;
-    boolean useCEP;
-    int iteration;
+    ArrayList<Variable> vars; //Variable objects from input
+    ArrayList<Constraint> cons; //Constraint objects from input
+    HashMap<Character, Integer> selected; //Keeps track of which values have been chosen for a Variable
+    ArrayList<Variable> solvedVars; //Keeps track of the order the Variables are solved in
+    boolean useCEP; //true if forward checking is to be used
+    int iteration; //Keeps track of which iteration the program is on
 
+	/**
+     * Constructor for making a default {@code State}.
+     */
     public State() {
         this(new ArrayList<>(), new ArrayList<>(), false);
     }
-
+	
+	/**
+     * Constructor for making a starting {@code State}.
+     * @param List of Variable Objects
+	 * @param List of Constraint Objects
+	 * @param true if forward checking is to be used
+     */
     public State(ArrayList<Variable> vars, ArrayList<Constraint> cons, boolean useCEP) {
         this.vars = vars;
         this.cons = cons;
@@ -26,7 +36,11 @@ public class State {
         solvedVars = new ArrayList<>();
         iteration = 1;
     }
-
+	
+	/**
+     * Creates a copy of a given state.
+	 * @return copy of given state
+     */
     public State copyOf() {
         State copy = new State();
         for (Variable v : vars) {
@@ -37,7 +51,11 @@ public class State {
         copy.useCEP = useCEP;
         return copy;
     }
-
+	
+	/**
+     * Checks to see if a given state is a solution
+	 * @return true if it is a solution
+     */
     public boolean isSolved() {
         for (Constraint c : cons) {
             if (!selected.containsKey(c.var1) || !selected.containsKey(c.var2)) {
@@ -51,11 +69,18 @@ public class State {
         }
         return true;
     }
-
+	
+	/**
+     * Sorts the Variables so the first one is the Variable to be chosen
+     */
     public void selectNextVar() {
         Collections.sort(vars);
     }
 
+	/**
+     * Sorts the values of a given Variable so the best value is chosen
+	 * @return array of sorted values for a Variable
+     */
     public int[] getOrderedVals() {
         Variable nextVar = vars.get(0);
         if (useCEP) {
@@ -78,6 +103,12 @@ public class State {
         }
     }
 
+	/**
+     * Finds the amount of values affected by choosing a value of a Variable
+	 * @param Variable where the value came from
+	 * @param integer of the value chosen
+	 * @return integer of total affected values
+     */
     private int getAffectedValues(Variable nextVar, int nextVal) {
         int numAffected = 0;
         for (Constraint c : cons) {
@@ -108,11 +139,44 @@ public class State {
         return numAffected;
     }
 
-    public void setVar(int val) {
-        //add val to selected and vars.get(0) to solvedVars
-        //apply affected values (similar to getAffectedValues but actually remove values)
+	/**
+     * Finds the amount of values affected by choosing a value of a Variable
+	 * @param value chosen for a move
+     */
+    public void setVar(int chosenVal) {
+		selected.put(vars.get(0).var,chosenVal);
+		solvedVars.add(vars.get(0));
+		for (Constraint c : cons) {
+			if (c.var1 == vars.get(0)) {
+                for (Variable v : vars) {
+                    if (c.var2 == v.var) {
+                        for (int val : v.values) {
+                            if (!c.valid(chosenVal, val)) {
+                                v.values.remove(val);
+                            }
+                        }
+                        break;
+                    }
+                }
+            } else if (c.var2 == vars.get(0)) {
+                for (Variable v : vars) {
+                    if (c.var1 == v.var) {
+                        for (int val : v.values) {
+                            if (!c.valid(val, chosenVal)) {
+                                v.values.remove(val);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+		}
     }
 
+	/**
+     * Checks to see if a given state is consistent to all of the constraints
+	 * @return true if it is consistent
+     */
     public boolean consistent() {
         for (Constraint c : cons) {
             int val1 = selected.get(c.var1);
@@ -124,6 +188,10 @@ public class State {
         return true;
     }
 
+	/**
+     * Gives the formatted output of the CSP
+	 * @return String of given output
+     */
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(iteration).append(". ");
