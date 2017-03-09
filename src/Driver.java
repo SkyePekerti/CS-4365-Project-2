@@ -1,16 +1,24 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Scanner;
-import java.util.Map;
-import java.util.HashMap;
 
+/**
+ * Main driver to test the classes
+ */
 public class Driver {
 
     int iteration; //Keeps track of which iteration the program is on
 
+    /**
+     * Perform pre-search setup.
+     * @param vars variables from .var file
+     * @param cons constraints from .con file
+     * @param useCEP flag for using forward checking
+     */
 	public void go(ArrayList<Variable> vars, ArrayList<Constraint> cons, boolean useCEP) {
+        // Have variables keep track of how many constraints they belong to
+        // for least constraining variable
         for (Constraint c : cons) {
             for (Variable v : vars) {
                 if (c.var1 == v.var || c.var2 == v.var) {
@@ -28,28 +36,55 @@ public class Driver {
 	 * @return true if the state is valid
      */
 	public boolean solve(State currState) {
+        // Check if current assignments satisfy all constraints
         if (currState.isSolved()) {
-            System.out.printf("%d. %s%n", iteration, currState);
-            return true;
+            // Limit to 30 iterations
+            if (iteration <= 30) {
+                // Print solution
+                System.out.printf("%d. %s%n", iteration, currState);
+                return true;
+            } else {
+                return false;
+            }
         }
+
+        // Pick most constrained, most constraining, and earliest alphabetical variable
         currState.selectNextVar();
+
+        // Check if forward checking failed
         if (currState.failedFC()) {
-            System.out.printf("%d. %s%n", iteration, currState);
-            iteration++;
+            // Limit to 30 iterations
+            if (iteration <= 30) {
+                // Print failure
+                System.out.printf("%d. %s%n", iteration, currState);
+                iteration++;
+            }
             return false;
         }
+
+        // Try to set all values in order from least constraining to most constraining
         for (int val : currState.getOrderedVals()) {
+            // Copy current state to make changes
             State nextState = currState.copyOf();
+
+            // Set the chosen variable to val
             nextState.setVar(val);
+
+            // Check consistency with current constraints
             if (nextState.consistent()) {
                 if (solve(nextState)) {
                     return true;
                 }
-            } else {
+            } else if (iteration <= 30) { // Limit to 30 iterations
+                // Print failure
                 System.out.printf("%d. %s%n", iteration, nextState);
                 iteration++;
+            } else {
+                return false;
             }
         }
+
+        // None of the values worked, so current assignments are wrong
         return false;
     }
 

@@ -1,8 +1,7 @@
 import java.util.ArrayList;
 
 /**
- * Created by Terrence Park and Skye Pekerti
- *
+ * Object representation of a variable.
  */
 public class Variable implements Comparable<Variable> {
 

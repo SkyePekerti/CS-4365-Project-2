@@ -4,8 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 
 /**
- * Created by Terrence Park and Skye Pekerti
- *
+ * Holds the constraints and the current values/assignments for the variables.
  */
 public class State {
 
@@ -159,13 +158,15 @@ public class State {
 	 * @param chosenVal chosen for a move
      */
     public void setVar(int chosenVal) {
-		selected.put(vars.get(0).var,chosenVal);
-		solvedVars.add(vars.get(0));
+        // When forward checking, remove illegal values
         if (useCEP) {
+            // Find constraints with the chosen variable
             for (Constraint c : cons) {
                 if (c.var1 == vars.get(0).var) {
+                    // Find variable it constrains
                     for (Variable v : vars) {
                         if (c.var2 == v.var) {
+                            // Find illegal values and remove
                             int i = 0;
                             while (i < v.values.size()) {
                                 int val = v.values.get(i);
@@ -179,8 +180,10 @@ public class State {
                         }
                     }
                 } else if (c.var2 == vars.get(0).var) {
+                    // Find variable it constrains
                     for (Variable v : vars) {
                         if (c.var1 == v.var) {
+                            // Find illegal values and remove
                             int i = 0;
                             while (i < v.values.size()) {
                                 int val = v.values.get(i);
@@ -196,21 +199,33 @@ public class State {
                 }
             }
         }
+
+        // Other variables that are constrained to the chosen variable now
+        // do not need to keep track of those constraints for least
+        // constraining variable
         for (Constraint c : cons) {
             if (c.var1 == vars.get(0).var) {
+                // Find variable the chosen variable constrains
                 for (Variable v : vars) {
                     if (c.var2 == v.var) {
+                        // Stop keeping track of constraint
                         v.numConstraints--;
                     }
                 }
             } else if (c.var2 == vars.get(0).var) {
+                // Find variable the chosen variable constrains
                 for (Variable v : vars) {
                     if (c.var1 == v.var) {
+                        // Stop keeping track of constraint
                         v.numConstraints--;
                     }
                 }
             }
         }
+
+        // Set variable to chosenVal
+        selected.put(vars.get(0).var,chosenVal);
+        solvedVars.add(vars.get(0));
         vars.remove(0);
     }
 
@@ -220,9 +235,12 @@ public class State {
      */
     public boolean consistent() {
         for (Constraint c : cons) {
+            //If either variable in c is not set, move on
             if (!selected.containsKey(c.var1) || !selected.containsKey(c.var2)) {
                 continue;
             }
+
+            //Check if constraint is valid
             int val1 = selected.get(c.var1);
             int val2 = selected.get(c.var2);
             if (!c.valid(val1, val2)) {

@@ -1,7 +1,5 @@
-
 /**
- * Created by Terrence Park and Skye Pekerti
- *
+ * Object representation of a constraint.
  */
 public class Constraint {
 	char var1; //First Variable of the constraint
