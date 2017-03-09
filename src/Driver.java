@@ -18,12 +18,7 @@ public class Driver {
         }
         solve(new State(vars, cons, useCEP));
 	}
-	
-	/**
-     * Follows the Backtracking Search Algorithm to solve input.
-     * @param args the commandline arguments
-	 * @return true if the state is valid
-     */
+
 	public boolean solve(State currState) {
         if (currState.isSolved()) {
             System.out.println(currState);

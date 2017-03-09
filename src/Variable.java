@@ -1,27 +1,17 @@
 import java.util.ArrayList;
 
-/**
- * Created by Terrence Park and Skye Pekerti
- *
- */
 public class Variable implements Comparable<Variable> {
 
-	char var; //Letter which represents the Variable
-	ArrayList<Integer> values; //Valid integer values that the Variable can be
-    int numConstraints; //Total constraints that the Variable is in
+	char var;
+	ArrayList<Integer> values;
+    int numConstraints;
 	
-	/**
-     * Constructor for making a default {@code Variable}.
-     */
 	public Variable() {
 		var = 'A';
 		values = new ArrayList<>();
         numConstraints = 0;
 	}
 	
-	/**
-     * Constructor for making a new {@code Variable}.
-     */
 	public Variable(String input) {
 		var = input.charAt(0);
 		values = new ArrayList<>();
@@ -31,11 +21,6 @@ public class Variable implements Comparable<Variable> {
 		}
 	}
 
-	/**
-     * Determines which Variable is the most constrained, most constraining, and first alphabetically
-	 * @param Variable to compare against
-	 * @return positive if current Variable is better than other
-     */
 	public int compareTo(Variable other) {
         if (values.size() == other.values.size()) {
             if (numConstraints == other.numConstraints) {
@@ -46,10 +31,6 @@ public class Variable implements Comparable<Variable> {
         return values.size() - other.values.size();
 	}
 
-	/**
-     * Creates a copy of the given Variable so values don't get lost.
-	 * @return copy of a given Variable
-     */
 	public Variable copyOf() {
         Variable copy = new Variable();
         copy.var = var;

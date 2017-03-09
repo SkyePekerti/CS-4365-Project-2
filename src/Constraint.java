@@ -1,37 +1,20 @@
-
-/**
- * Created by Terrence Park and Skye Pekerti
- *
- */
 public class Constraint {
-	char var1; //First Variable of the constraint
-	char var2; //Second Variable of the constraint
-	char operator; //Equality operator of the Variables
+	char var1;
+	char var2;
+	char operator;
 	
-	/**
-     * Constructor for making a default {@code Constraint}.
-     */
 	public Constraint() {
 		var1 = 'A';
 		var2 = 'A';
 		operator = '=';
 	}
 	
-	/**
-     * Constructor for making a new {@code Constraint}.
-     */
 	public Constraint(String input) {
 		var1 = input.charAt(0);
 		var2 = input.charAt(4);
 		operator = input.charAt(2);
 	}
 
-	/**
-     * Checks to see if a constraint works on a given pair of values
-	 * @param value of the first Variable
-	 * @param value of the second Variable
-	 * @return true if the pair of values works under the constraint
-     */
 	public boolean valid(int val1, int val2) {
         switch (operator) {
         case '<':
