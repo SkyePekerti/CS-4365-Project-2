@@ -33,7 +33,7 @@ public class Variable implements Comparable<Variable> {
 
 	/**
      * Determines which Variable is the most constrained, most constraining, and first alphabetically
-	 * @param Variable to compare against
+	 * @param other Variable to compare against
 	 * @return positive if current Variable is better than other
      */
 	public int compareTo(Variable other) {
@@ -57,4 +57,9 @@ public class Variable implements Comparable<Variable> {
         copy.numConstraints = numConstraints;
         return copy;
     }
+
+    @Override
+	public String toString() {
+		return String.format("%c: %s", var, values.toString());
+	}
 }

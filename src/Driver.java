@@ -8,6 +8,8 @@ import java.util.HashMap;
 
 public class Driver {
 
+    int iteration; //Keeps track of which iteration the program is on
+
 	public void go(ArrayList<Variable> vars, ArrayList<Constraint> cons, boolean useCEP) {
         for (Constraint c : cons) {
             for (Variable v : vars) {
@@ -16,20 +18,26 @@ public class Driver {
                 }
             }
         }
+        iteration = 1;
         solve(new State(vars, cons, useCEP));
 	}
 	
 	/**
      * Follows the Backtracking Search Algorithm to solve input.
-     * @param args the commandline arguments
+     * @param currState the current variable state
 	 * @return true if the state is valid
      */
 	public boolean solve(State currState) {
         if (currState.isSolved()) {
-            System.out.println(currState);
+            System.out.printf("%d. %s%n", iteration, currState);
             return true;
         }
         currState.selectNextVar();
+        if (currState.failedFC()) {
+            System.out.printf("%d. %s%n", iteration, currState);
+            iteration++;
+            return false;
+        }
         for (int val : currState.getOrderedVals()) {
             State nextState = currState.copyOf();
             nextState.setVar(val);
@@ -38,7 +46,8 @@ public class Driver {
                     return true;
                 }
             } else {
-                System.out.println(nextState);
+                System.out.printf("%d. %s%n", iteration, nextState);
+                iteration++;
             }
         }
         return false;

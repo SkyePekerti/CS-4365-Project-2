@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -13,7 +14,6 @@ public class State {
     HashMap<Character, Integer> selected; //Keeps track of which values have been chosen for a Variable
     ArrayList<Variable> solvedVars; //Keeps track of the order the Variables are solved in
     boolean useCEP; //true if forward checking is to be used
-    int iteration; //Keeps track of which iteration the program is on
 
 	/**
      * Constructor for making a default {@code State}.
@@ -24,9 +24,9 @@ public class State {
 	
 	/**
      * Constructor for making a starting {@code State}.
-     * @param List of Variable Objects
-	 * @param List of Constraint Objects
-	 * @param true if forward checking is to be used
+     * @param vars List of Variable Objects
+	 * @param cons List of Constraint Objects
+	 * @param useCEP true if forward checking is to be used
      */
     public State(ArrayList<Variable> vars, ArrayList<Constraint> cons, boolean useCEP) {
         this.vars = vars;
@@ -34,7 +34,6 @@ public class State {
         this.useCEP = useCEP;
         selected = new HashMap<>();
         solvedVars = new ArrayList<>();
-        iteration = 1;
     }
 	
 	/**
@@ -48,6 +47,9 @@ public class State {
         }
         copy.cons = cons;
         copy.selected.putAll(selected);
+        for (Variable v : solvedVars) {
+            copy.solvedVars.add(v.copyOf());
+        }
         copy.useCEP = useCEP;
         return copy;
     }
@@ -77,36 +79,37 @@ public class State {
         Collections.sort(vars);
     }
 
+    /**
+     * Checks if the current variable selection failed forward check.
+     * @return true if failed forward check
+     */
+    public boolean failedFC() {
+        return vars.get(0).values.size() == 0;
+    }
+
 	/**
      * Sorts the values of a given Variable so the best value is chosen
 	 * @return array of sorted values for a Variable
      */
     public int[] getOrderedVals() {
         Variable nextVar = vars.get(0);
-        if (useCEP) {
-            int[][] valPairs = new int[nextVar.values.size()][2];
-            for (int i = 0; i < valPairs.length; i++) {
-                valPairs[i][0] = nextVar.values.get(i);
-                valPairs[i][1] = getAffectedValues(nextVar, valPairs[i][0]);
-            }
-            int[] orderedVals = new int[nextVar.values.size()];
-            for (int i = 0; i < valPairs.length; i++) {
-                orderedVals[i] = valPairs[i][0];
-            }
-            return orderedVals;
-        } else {
-            int[] orderedVals = new int[nextVar.values.size()];
-            for (int i = 0; i < orderedVals.length; i++) {
-                orderedVals[i] = nextVar.values.get(i);
-            }
-            return orderedVals;
+        int[][] valPairs = new int[nextVar.values.size()][2];
+        for (int i = 0; i < valPairs.length; i++) {
+            valPairs[i][0] = nextVar.values.get(i);
+            valPairs[i][1] = getAffectedValues(nextVar, valPairs[i][0]);
         }
+        Arrays.sort(valPairs, (one, two) -> one[1] - two[1]);
+        int[] orderedVals = new int[nextVar.values.size()];
+        for (int i = 0; i < valPairs.length; i++) {
+            orderedVals[i] = valPairs[i][0];
+        }
+        return orderedVals;
     }
 
 	/**
      * Finds the amount of values affected by choosing a value of a Variable
-	 * @param Variable where the value came from
-	 * @param integer of the value chosen
+	 * @param nextVar Variable where the value came from
+	 * @param nextVal integer of the value chosen
 	 * @return integer of total affected values
      */
     private int getAffectedValues(Variable nextVar, int nextVal) {
@@ -116,7 +119,7 @@ public class State {
                 for (Variable v : vars) {
                     if (c.var2 == v.var) {
                         for (int val : v.values) {
-                            if (c.valid(nextVal, val)) {
+                            if (!c.valid(nextVal, val)) {
                                 numAffected++;
                             }
                         }
@@ -127,7 +130,7 @@ public class State {
                 for (Variable v : vars) {
                     if (c.var1 == v.var) {
                         for (int val : v.values) {
-                            if (c.valid(val, nextVal)) {
+                            if (!c.valid(val, nextVal)) {
                                 numAffected++;
                             }
                         }
@@ -140,37 +143,63 @@ public class State {
     }
 
 	/**
-     * Finds the amount of values affected by choosing a value of a Variable
-	 * @param value chosen for a move
+     * Sets the next variable to {@code chosenVal} and updates constraints.
+	 * @param chosenVal chosen for a move
      */
     public void setVar(int chosenVal) {
 		selected.put(vars.get(0).var,chosenVal);
 		solvedVars.add(vars.get(0));
-		for (Constraint c : cons) {
-			if (c.var1 == vars.get(0)) {
-                for (Variable v : vars) {
-                    if (c.var2 == v.var) {
-                        for (int val : v.values) {
-                            if (!c.valid(chosenVal, val)) {
-                                v.values.remove(val);
+        if (useCEP) {
+            for (Constraint c : cons) {
+                if (c.var1 == vars.get(0).var) {
+                    for (Variable v : vars) {
+                        if (c.var2 == v.var) {
+                            int i = 0;
+                            while (i < v.values.size()) {
+                                int val = v.values.get(i);
+                                if (!c.valid(chosenVal, val)) {
+                                    v.values.remove(i);
+                                } else {
+                                    i++;
+                                }
                             }
+                            break;
                         }
-                        break;
                     }
-                }
-            } else if (c.var2 == vars.get(0)) {
-                for (Variable v : vars) {
-                    if (c.var1 == v.var) {
-                        for (int val : v.values) {
-                            if (!c.valid(val, chosenVal)) {
-                                v.values.remove(val);
+                } else if (c.var2 == vars.get(0).var) {
+                    for (Variable v : vars) {
+                        if (c.var1 == v.var) {
+                            int i = 0;
+                            while (i < v.values.size()) {
+                                int val = v.values.get(i);
+                                if (!c.valid(val, chosenVal)) {
+                                    v.values.remove(i);
+                                } else {
+                                    i++;
+                                }
                             }
+                            break;
                         }
-                        break;
                     }
                 }
             }
-		}
+        }
+        for (Constraint c : cons) {
+            if (c.var1 == vars.get(0).var) {
+                for (Variable v : vars) {
+                    if (c.var2 == v.var) {
+                        v.numConstraints--;
+                    }
+                }
+            } else if (c.var2 == vars.get(0).var) {
+                for (Variable v : vars) {
+                    if (c.var1 == v.var) {
+                        v.numConstraints--;
+                    }
+                }
+            }
+        }
+        vars.remove(0);
     }
 
 	/**
@@ -179,6 +208,9 @@ public class State {
      */
     public boolean consistent() {
         for (Constraint c : cons) {
+            if (!selected.containsKey(c.var1) || !selected.containsKey(c.var2)) {
+                continue;
+            }
             int val1 = selected.get(c.var1);
             int val2 = selected.get(c.var2);
             if (!c.valid(val1, val2)) {
@@ -194,13 +226,12 @@ public class State {
      */
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(iteration).append(". ");
         boolean first = true;
         for (Variable v : solvedVars) {
             if (!first) {
                 sb.append(", ");
-                first = false;
             }
+            first = false;
             sb.append(v.var).append("=").append(selected.get(v.var));
         }
         sb.append("  ");
